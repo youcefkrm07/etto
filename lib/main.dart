@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io' show File;
+import 'dart:io' show File, Platform;
 
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:encrypt/encrypt.dart' as enc;
@@ -46,7 +46,7 @@ class _CryptoHomePageState extends State<CryptoHomePage> {
   static const String fixedKeyString = "UYGy723!Po-efjve"; // 16 chars
 
   final TextEditingController _packageController =
-      TextEditingController(text: "app.grapheneos.camera.plaz");
+      TextEditingController(text: "com.crypto.tool");
   final TextEditingController _inputController = TextEditingController();
   final TextEditingController _outputController = TextEditingController();
 
@@ -125,10 +125,24 @@ class _CryptoHomePageState extends State<CryptoHomePage> {
         final jsonObj = json.decode(result) as Object;
         final pretty = const JsonEncoder.withIndent('  ').convert(jsonObj);
         _outputController.text = pretty;
+        // Auto-save the decrypted settings
+        if (!kIsWeb && _selectedFiles.isNotEmpty) {
+          final firstFile = _selectedFiles.first;
+          if (firstFile.path != null) {
+            final dir = File(firstFile.path!).parent;
+            final saveFile = File('${dir.path}/cloneSettings.json');
+            await saveFile.writeAsString(pretty);
+            _snack('Decrypted and saved to ${saveFile.path}');
+          } else {
+            _snack('Decrypted successfully using $used');
+          }
+        } else {
+          _snack('Decrypted successfully using $used');
+        }
       } catch (_) {
         _outputController.text = result;
+        _snack('Decrypted successfully using $used');
       }
-      _snack('Decrypted successfully using $used');
     } catch (e) {
       if (kDebugMode) {
         debugPrint('Decrypt error: $e');
@@ -297,7 +311,7 @@ class _CryptoHomePageState extends State<CryptoHomePage> {
                 controller: _packageController,
                 decoration: const InputDecoration(
                   labelText: 'Package Name',
-                  hintText: 'e.g. app.grapheneos.camera.plaz',
+                  hintText: 'e.g. com.crypto.tool',
                   border: OutlineInputBorder(),
                 ),
               ),
