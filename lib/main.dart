@@ -1,6 +1,5 @@
 import 'dart:convert';
-import 'dart:io' show File, Platform;
-import 'dart:typed_data';
+import 'dart:io' show File;
 
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:encrypt/encrypt.dart' as enc;
@@ -123,11 +122,11 @@ class _CryptoHomePageState extends State<CryptoHomePage> {
 
       // Pretty print JSON when possible
       try {
-        final jsonObj = json.decode(result!) as Object;
+        final jsonObj = json.decode(result) as Object;
         final pretty = const JsonEncoder.withIndent('  ').convert(jsonObj);
         _outputController.text = pretty;
       } catch (_) {
-        _outputController.text = result!;
+        _outputController.text = result;
       }
       _snack('Decrypted successfully using $used');
     } catch (e) {
