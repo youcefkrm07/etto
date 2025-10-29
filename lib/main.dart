@@ -208,42 +208,11 @@ class _CryptoHomePageState extends State<CryptoHomePage> {
       }
       _selectedFiles = result.files;
 
-      // Build a quick lookup by basename (case-insensitive)
-      final byName = <String, PlatformFile>{};
-      for (final f in _selectedFiles) {
-        final name = (f.name).trim();
-        byName[name] = f;
-        byName[name.toLowerCase()] = f;
-      }
+      // Sort files by name to ensure consistent order
+      _selectedFiles.sort((a, b) => a.name.compareTo(b.name));
 
-      // Attempt sequential assembly by expected names 0..N
       final buffer = StringBuffer();
-      int index = 0;
-      int found = 0;
-      for (;;) {
-        final expect = _expectedName(pkg, index);
-        final expectLower = expect.toLowerCase();
-        PlatformFile? f = byName[expect] ?? byName[expectLower];
-        if (f == null) {
-          // Fallback common single-file names
-          for (final alt in const ['config.bin', 'settings.bin', 'config.dat']) {
-            f = byName[alt];
-            if (f != null) break;
-          }
-        }
-        if (f == null) {
-          // Manual filenames from Python example
-          for (final manual in const [
-            '03E565C247FB30DC34B67E673A4A174E',
-            '04EFD110421B0E459EDEF6483ACC7985',
-            '0760139EC42A35D7F978633A16057240',
-          ]) {
-            f = byName[manual] ?? byName[manual.toLowerCase()];
-            if (f != null) break;
-          }
-        }
-        if (f == null) break; // stop when next part not found
-
+      for (final f in _selectedFiles) {
         String content;
         if (kIsWeb) {
           // On web, PlatformFile.bytes is used
@@ -256,12 +225,10 @@ class _CryptoHomePageState extends State<CryptoHomePage> {
           }
         }
         buffer.write(_sanitizeBase64(content));
-        found++;
-        index++;
       }
 
       final assembled = buffer.toString();
-      _filesInfo = 'Assembled $found file(s), total length: ${assembled.length}';
+      _filesInfo = 'Assembled ${_selectedFiles.length} file(s), total length: ${assembled.length}';
       if (assembled.isEmpty) {
         _snack('No matching resource files found in selection');
         setState(() {});
